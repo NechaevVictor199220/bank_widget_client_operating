@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict, List
 
 
@@ -29,7 +30,7 @@ if __name__ == "__main__":
 
     print("\n" + "=" * 50 + "\n")
 
-    # Тестирование с статусом 'CANCELED'
+    # Тестирование со статусом 'CANCELED'
     canceled_ops = filter_by_state(operations, "CANCELED")
     print("CANCELED operations:")
     for op in canceled_ops:
@@ -41,11 +42,8 @@ if __name__ == "__main__":
     pending_ops = filter_by_state(operations, "PENDING")
     print("PENDING operations:", pending_ops)  # Должен быть пустой список
 
-from datetime import datetime
-from typing import Any, Dict, List
 
-
-def sort_by_date(operations: List[Dict[str, Any]], reverse: bool = True) -> List[Dict[str, Any]]:
+def sort_by_date(operation: List[Dict[str, Any]], reverse: bool = True) -> List[Dict[str, Any]]:
     """
     Функция sort_by_date, которая принимает список словарей и необязательный параметр,
     задающий порядок сортировки (по умолчанию — убывание).
@@ -61,7 +59,7 @@ def sort_by_date(operations: List[Dict[str, Any]], reverse: bool = True) -> List
             # Если дата некорректна, возвращаем минимальную дату
             return datetime.min
 
-    return sorted(operations, key=get_date_key, reverse=reverse)
+    return sorted(operation, key=get_date_key, reverse=reverse)
 
 
 # Примеры использования с предоставленными данными
