@@ -1,8 +1,8 @@
 import pytest
-
+from typing import Dict, List, Any
 
 @pytest.fixture
-def sample_card_numbers():
+def sample_card_numbers() -> Dict[str, str]:
     return {
         "standard": "7000792289606361",
         "visa": "4111111111111111",
@@ -15,7 +15,7 @@ def sample_card_numbers():
 
 
 @pytest.fixture
-def sample_account_numbers():
+def sample_account_numbers() -> Dict[str, str]:
     return {
         "standard": "73654108430135874305",
         "short": "1234",
@@ -26,7 +26,7 @@ def sample_account_numbers():
 
 
 @pytest.fixture
-def sample_data():
+def sample_data() -> Dict:
     return {
         "card_visa": "Visa Platinum 7000792289606361",
         "card_mastercard": "Maestro 7000792289606361",
@@ -38,7 +38,7 @@ def sample_data():
 
 
 @pytest.fixture
-def sample_dates():
+def sample_dates() -> Dict:
     return {
         "standard": "2024-03-11T02:26:18.671407",
         "short_time": "2024-03-11T02:26:18",
@@ -49,7 +49,7 @@ def sample_dates():
 
 
 @pytest.fixture
-def sample_operations():
+def sample_operations() -> List[Dict[str, Any]]:
     return [
         {"id": 1, "state": "EXECUTED", "date": "2024-03-11T02:26:18.671407"},
         {"id": 2, "state": "PENDING", "date": "2024-02-10T01:25:17.570306"},
@@ -61,7 +61,7 @@ def sample_operations():
 
 
 @pytest.fixture
-def operations_with_same_dates():
+def operations_with_same_dates() ->List[Dict[str, Any]]:
     return [
         {"id": 1, "state": "EXECUTED", "date": "2024-03-11T02:26:18.671407"},
         {"id": 2, "state": "PENDING", "date": "2024-03-11T02:26:18.671407"},
@@ -70,7 +70,7 @@ def operations_with_same_dates():
 
 
 @pytest.fixture
-def operations_invalid_dates():
+def operations_invalid_dates()->List[Dict[str, Any]]:
     return [
         {"id": 1, "state": "EXECUTED", "date": "invalid-date"},
         {"id": 2, "state": "PENDING", "date": "2024-02-10T01:25:17.570306"},
