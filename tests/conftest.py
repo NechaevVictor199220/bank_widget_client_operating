@@ -1,8 +1,23 @@
+from typing import Any, Dict, List
+
 import pytest
-from typing import Dict, List, Any
+
 
 @pytest.fixture
 def sample_card_numbers() -> Dict[str, str]:
+    """
+    Фикстура предоставляет тестовые данные номеров карт для тестирования.
+
+    Returns:
+        Словарь с различными типами номеров карт:
+        - standard: стандартный 16-значный номер
+        - visa: номер карты Visa
+        - mastercard: номер карты Mastercard
+        - short: короткий номер (менее 16 цифр)
+        - empty: пустая строка
+        - with_spaces: номер с пробелами
+        - with_dashes: номер с дефисами
+    """
     return {
         "standard": "7000792289606361",
         "visa": "4111111111111111",
@@ -16,6 +31,17 @@ def sample_card_numbers() -> Dict[str, str]:
 
 @pytest.fixture
 def sample_account_numbers() -> Dict[str, str]:
+    """
+    Фикстура предоставляет тестовые данные номеров счетов для тестирования.
+
+    Returns:
+        Словарь с различными типами номеров счетов:
+        - standard: стандартный длинный номер счета
+        - short: короткий номер (менее 4 цифр)
+        - empty: пустая строка
+        - min_length: номер минимальной длины для маскировки
+        - with_spaces: номер с пробелами
+    """
     return {
         "standard": "73654108430135874305",
         "short": "1234",
@@ -26,7 +52,19 @@ def sample_account_numbers() -> Dict[str, str]:
 
 
 @pytest.fixture
-def sample_data() -> Dict:
+def sample_data() -> Dict[str, str]:
+    """
+    Фикстура предоставляет тестовые данные для универсальной функции маскировки.
+
+    Returns:
+        Словарь с данными для тестирования mask_account_card:
+        - card_visa: строка с картой Visa
+        - card_mastercard: строка с картой Mastercard
+        - account: строка со счетом на русском
+        - account_english: строка со счетом на английском
+        - invalid: некорректная строка
+        - empty: пустая строка
+    """
     return {
         "card_visa": "Visa Platinum 7000792289606361",
         "card_mastercard": "Maestro 7000792289606361",
@@ -38,7 +76,18 @@ def sample_data() -> Dict:
 
 
 @pytest.fixture
-def sample_dates() -> Dict:
+def sample_dates() -> Dict[str, str]:
+    """
+    Фикстура предоставляет тестовые данные дат для тестирования.
+
+    Returns:
+        Словарь с различными форматами дат:
+        - standard: полный ISO формат с миллисекундами
+        - short_time: ISO формат без миллисекунд
+        - no_time: только дата без времени
+        - invalid: невалидный формат даты
+        - empty: пустая строка
+    """
     return {
         "standard": "2024-03-11T02:26:18.671407",
         "short_time": "2024-03-11T02:26:18",
@@ -50,6 +99,15 @@ def sample_dates() -> Dict:
 
 @pytest.fixture
 def sample_operations() -> List[Dict[str, Any]]:
+    """
+    Фикстура предоставляет тестовые данные операций для тестирования фильтрации и сортировки.
+
+    Returns:
+        Список словарей с операциями, содержащими:
+        - Операции с разными статусами (EXECUTED, PENDING, CANCELED)
+        - Операции с разными датами в хронологическом порядке
+        - Операцию без ключа state (для тестирования обработки отсутствующих полей)
+    """
     return [
         {"id": 1, "state": "EXECUTED", "date": "2024-03-11T02:26:18.671407"},
         {"id": 2, "state": "PENDING", "date": "2024-02-10T01:25:17.570306"},
@@ -61,7 +119,15 @@ def sample_operations() -> List[Dict[str, Any]]:
 
 
 @pytest.fixture
-def operations_with_same_dates() ->List[Dict[str, Any]]:
+def operations_with_same_dates() -> List[Dict[str, Any]]:
+    """
+    Фикстура предоставляет операции с одинаковыми датами для тестирования сортировки.
+
+    Returns:
+        Список словарей с операциями, содержащими:
+        - Операции с идентичными датами (проверка стабильности сортировки)
+        - Операции с разными статусами для проверки сохранения порядка
+    """
     return [
         {"id": 1, "state": "EXECUTED", "date": "2024-03-11T02:26:18.671407"},
         {"id": 2, "state": "PENDING", "date": "2024-03-11T02:26:18.671407"},
@@ -70,7 +136,16 @@ def operations_with_same_dates() ->List[Dict[str, Any]]:
 
 
 @pytest.fixture
-def operations_invalid_dates()->List[Dict[str, Any]]:
+def operations_invalid_dates() -> List[Dict[str, Any]]:
+    """
+    Фикстура предоставляет операции с невалидными датами для тестирования обработки ошибок.
+
+    Returns:
+        Список словарей с операциями, содержащими:
+        - Невалидный формат даты
+        - Корректный формат даты для сравнения
+        - Пустую строку вместо даты
+    """
     return [
         {"id": 1, "state": "EXECUTED", "date": "invalid-date"},
         {"id": 2, "state": "PENDING", "date": "2024-02-10T01:25:17.570306"},

@@ -1,3 +1,5 @@
+from typing import Any, Dict, List
+
 import pytest
 
 from src.processing import filter_by_state, sort_by_date
@@ -12,7 +14,9 @@ from src.processing import filter_by_state, sort_by_date
         ("NONEXISTENT", 0),
     ],
 )
-def test_filter_by_state_parametrized(sample_operations, state, expected_count):
+def test_filter_by_state_parametrized(
+    sample_operations: List[Dict[str, Any]], state: str, expected_count: int
+) -> None:
     """Параметризованный тест фильтрации по разным состояниям"""
     result = filter_by_state(sample_operations, state)
     assert len(result) == expected_count
@@ -20,20 +24,20 @@ def test_filter_by_state_parametrized(sample_operations, state, expected_count):
         assert all(op.get("state") == state for op in result)
 
 
-def test_filter_by_state_default(sample_operations):
+def test_filter_by_state_default(sample_operations: List[Dict[str, Any]]) -> None:
     """Тест фильтрации со значением по умолчанию"""
     result = filter_by_state(sample_operations)
     assert len(result) == 3
     assert all(op["state"] == "EXECUTED" for op in result)
 
 
-def test_filter_by_state_empty_list():
+def test_filter_by_state_empty_list() -> None:
     """Тест фильтрации пустого списка"""
     assert filter_by_state([]) == []
     assert filter_by_state([], "EXECUTED") == []
 
 
-def test_filter_by_state_operations_without_state():
+def test_filter_by_state_operations_without_state() -> None:
     """Тестирование операций без ключа state"""
     operations = [
         {"id": 1, "date": "2024-01-01"},  # нет state
@@ -45,9 +49,9 @@ def test_filter_by_state_operations_without_state():
     assert result[0]["id"] == 2
 
 
-def test_filter_by_state_none_values():
+def test_filter_by_state_none_values() -> None:
     """Тестирование с None значениями"""
-    operations = [
+    operations: List[Dict[str, Any]] = [
         {"id": 1, "state": None, "date": "2024-01-01"},
         {"id": 2, "state": "EXECUTED", "date": "2024-01-02"},
     ]
@@ -57,41 +61,41 @@ def test_filter_by_state_none_values():
 
 
 # Тесты для sort_by_date
-def test_sort_by_date_descending(sample_operations):
+def test_sort_by_date_descending(sample_operations: List[Dict[str, Any]]) -> None:
     """Тест сортировки по убыванию"""
     result = sort_by_date(sample_operations, reverse=True)
     dates = [op["date"] for op in result if "date" in op]
     assert dates == sorted(dates, reverse=True)
 
 
-def test_sort_by_date_ascending(sample_operations):
+def test_sort_by_date_ascending(sample_operations: List[Dict[str, Any]]) -> None:
     """Тест сортировки по возрастанию"""
     result = sort_by_date(sample_operations, reverse=False)
     dates = [op["date"] for op in result if "date" in op]
     assert dates == sorted(dates)
 
 
-def test_sort_by_date_same_dates(operations_with_same_dates):
+def test_sort_by_date_same_dates(operations_with_same_dates: List[Dict[str, Any]]) -> None:
     """Тест сортировки с одинаковыми датами"""
     result = sort_by_date(operations_with_same_dates, reverse=True)
     assert len(result) == 3
 
 
-def test_sort_by_date_invalid_dates(operations_invalid_dates):
+def test_sort_by_date_invalid_dates(operations_invalid_dates: List[Dict[str, Any]]) -> None:
     """Тест сортировки с невалидными датами"""
     result = sort_by_date(operations_invalid_dates, reverse=True)
     assert len(result) == 3
 
 
-def test_sort_by_date_empty_list():
+def test_sort_by_date_empty_list() -> None:
     """Тест сортировки пустого списка"""
     assert sort_by_date([]) == []
     assert sort_by_date([], reverse=False) == []
 
 
-def test_sort_by_date_mixed_valid_invalid():
+def test_sort_by_date_mixed_valid_invalid() -> None:
     """Тестирование сортировки с смешанными валидными и невалидными датами"""
-    operations = [
+    operations: List[Dict[str, Any]] = [
         {"id": 1, "date": "invalid-date"},
         {"id": 2, "date": "2024-01-02T00:00:00.000000"},
         {"id": 3, "date": "2024-01-01T00:00:00.000000"},
@@ -101,7 +105,7 @@ def test_sort_by_date_mixed_valid_invalid():
     assert len(result) == 4
 
 
-def test_sort_by_date_empty_strings():
+def test_sort_by_date_empty_strings() -> None:
     """Тестирование сортировки с пустыми строками дат"""
     operations = [
         {"id": 1, "date": ""},
@@ -112,9 +116,9 @@ def test_sort_by_date_empty_strings():
     assert len(result) == 3
 
 
-def test_sort_by_date_none_values():
+def test_sort_by_date_none_values() -> None:
     """Тестирование сортировки с None значениями дат"""
-    operations = [
+    operations: List[Dict[str, Any]] = [
         {"id": 1, "date": None},
         {"id": 2, "date": "2024-01-02T00:00:00.000000"},
         {"id": 3, "date": "2024-01-01T00:00:00.000000"},
@@ -123,7 +127,7 @@ def test_sort_by_date_none_values():
     assert len(result) == 3
 
 
-def test_sort_by_date_single_operation():
+def test_sort_by_date_single_operation() -> None:
     """Тестирование сортировки одного элемента"""
     operations = [{"id": 1, "date": "2024-01-01T00:00:00.000000"}]
     result = sort_by_date(operations)
@@ -131,7 +135,7 @@ def test_sort_by_date_single_operation():
     assert result[0]["id"] == 1
 
 
-def test_sort_by_date_identical_dates():
+def test_sort_by_date_identical_dates() -> None:
     """Тестирование сортировки с одинаковыми датами"""
     operations = [
         {"id": 1, "date": "2024-01-01T00:00:00.000000"},
