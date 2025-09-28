@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Iterator
+from typing import List, Dict, Any, Iterator, Generator
 
 
 def filter_by_currency(transactions: List[Dict[str, Any]], currency_code: str) -> Iterator[Dict[str, Any]]:
@@ -143,3 +143,41 @@ if __name__ == "__main__":
         except StopIteration:
             print("Больше нет транзакций")
             break
+
+
+def card_number_generator(start: int, end: int) -> Generator[str, None, None]:
+    """
+    Генератор номеров банковских карт в заданном диапазоне.
+
+    Args:
+        start: начальный номер (от 1)
+        end: конечный номер (до 9999999999999999)
+
+    Yields:
+        Номер карты в формате XXXX XXXX XXXX XXXX
+    """
+    # Проверка валидности диапазона
+    if start < 1:
+        raise ValueError("Начальный номер должен быть не менее 1")
+    if end > 9999999999999999:
+        raise ValueError("Конечный номер не может превышать 9999999999999999")
+    if start > end:
+        raise ValueError("Начальный номер не может быть больше конечного")
+
+    for number in range(start, end + 1):
+        # Форматируем число в 16-значную строку с ведущими нулями
+        card_num_str = str(number).zfill(16)
+
+        # Разбиваем на группы по 4 цифры
+        formatted_card = ' '.join([
+            card_num_str[i:i + 4] for i in range(0, 16, 4)
+        ])
+
+        yield formatted_card
+
+
+print("Пример из задания (1-5):")
+for card_number in card_number_generator(1, 5):
+    print(card_number)
+
+print("\n" + "=" * 50)
