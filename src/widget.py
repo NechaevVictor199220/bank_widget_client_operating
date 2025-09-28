@@ -1,5 +1,6 @@
-from .masks import get_mask_account, get_mask_card_number
 from datetime import datetime
+
+from .masks import get_mask_account, get_mask_card_number
 
 
 def mask_account_card(account_info: str) -> str:
@@ -7,6 +8,9 @@ def mask_account_card(account_info: str) -> str:
     Функция принимает строку, содержащую тип и номер карты или счета.
     Возвращает строку с замаскированным номером
     """
+    if not account_info:
+        return account_info
+
     parts = account_info.split()
     if "счет" in account_info.lower() or "account" in account_info.lower():
         account_number = parts[-1]
