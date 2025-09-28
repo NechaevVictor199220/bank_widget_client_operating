@@ -1,7 +1,8 @@
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import pytest
-from src.generators import filter_by_currency, transaction_descriptions, card_number_generator
+
+from src.generators import card_number_generator, filter_by_currency, transaction_descriptions
 
 
 class TestFilterByCurrency:
