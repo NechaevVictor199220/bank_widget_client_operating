@@ -1,7 +1,8 @@
-import pytest
 import os
 import tempfile
-from typing import Any
+
+import pytest
+
 from src.decorators import log
 
 
@@ -82,6 +83,7 @@ class TestLogDecorator:
         temp_file.close()
 
         try:
+
             @log(filename=filename)
             def multiply(a: int, b: int) -> int:
                 return a * b
@@ -111,6 +113,7 @@ class TestLogDecorator:
         temp_file.close()
 
         try:
+
             @log(filename=filename)
             def raise_custom_error(x: str) -> None:
                 raise RuntimeError("Custom error occurred")
@@ -137,6 +140,7 @@ class TestLogDecorator:
         temp_file.close()
 
         try:
+
             @log(filename=filename)
             def func1(x: int) -> int:
                 return x + 1
@@ -192,6 +196,7 @@ class TestLogDecorator:
         temp_file.close()
 
         try:
+
             @log(filename=filename)
             def add(a: int, b: int) -> int:
                 return a + b
