@@ -9,6 +9,7 @@
 - Фильтрация операций по статусу
 - Сортировка операций по дате
 - Форматирование дат
+- Логирование вызовов функций
 
 ## Установка
 
@@ -39,15 +40,17 @@ src/
 
 ├── widget.py         # Основные функции обработки данных
 
-└── processing.py     # Функции фильтрации и сортировки
+├── processing.py     # Функции фильтрации и сортировки
+
+└── decorators.py     # Декораторы для логирования
 
 tests/
 
 ├── test_masks.py     # Тесты для модуля masks
 
-├── test_widget.py    # Тесты для модуля widget
+├── test_processing.py # Тесты для модуля processing
 
-└── test_processing.py # Тесты для модуля processing
+└── test_decorators.py # Тесты для модуля decorators
 ## Использование
 ### Импорт модулей
 #### python
@@ -57,6 +60,8 @@ from src.masks import get_mask_account_number, get_mask_card_number
 from src.widget import mask_account_card, get_date
 
 from src.processing import filter_by_state, sort_by_date
+
+from src.decorators import log
 ```
 # Примеры работы
 ## Маскировка номеров карт и счетов
@@ -120,6 +125,53 @@ sorted_asc = sort_by_date(operations, reverse=False)
 for op in sorted_asc:
     print(f"{op['date']} - {op['id']}")
 ```
+## Логирование функций с декоратором @log
+### Базовое использование (вывод в консоль)
+```
+@log
+def process_transaction(amount: float, account: str) -> str:
+    return f"Processed {amount} to {account}"
+
+result = process_transaction(1000.0, "1234567890")
+# Вывод: [2024-03-11 10:30:45] Вызов функции: process_transaction
+#         [2024-03-11 10:30:45] Функция process_transaction выполнена успешно
+```
+### Логирование в файл
+
+```
+@log(filename="operations.log")
+def transfer_funds(source: str, target: str, amount: float) -> bool:
+    # логика перевода
+    return True
+
+transfer_funds("1234", "5678", 500.0)
+# Запись в файл operations.log
+```
+### Логирование с кастомным сообщением
+
+```@log(msg="Важная банковская операция")
+def critical_operation() -> None:
+    # важная логика
+    pass
+
+critical_operation()
+# Вывод: [2024-03-11 10:30:45] Вызов функции: Важная банковская операция
+```
+
+# Логирование ошибок
+
+```python
+@log
+def risky_operation() -> None:
+    raise ValueError("Недостаточно средств")
+
+try:
+    risky_operation()
+except ValueError:
+    pass
+# Вывод: [2024-03-11 10:30:45] Ошибка в функции risky_operation: Недостаточно средств
+```
+
 # Тестирование
 ## Запуск тестов и проверка качества кода:
 ### Запуск всех тестов
@@ -174,6 +226,15 @@ poetry run isort src/
 * Сортировка по дате: сортировка по возрастанию/убыванию с обработкой невалидных дат
 
 * Граничные случаи: операции без ключей, пустые списки, одинаковые даты
+### Модуль test_decorators.py
+* Логирование в консоль: проверка вывода успешных операций и ошибок
+
+* Логирование в файл: проверка записи в файл и режима дополнения
+
+* Сохранение метаданных: проверка сохранения имени, документации и аннотаций функций
+
+* Использование без скобок: проверка работы декоратора как @log и @log()
+
 # Форматирование кода
 ### Проект использует следующие инструменты для поддержания качества кода:
 
