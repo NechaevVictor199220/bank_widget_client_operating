@@ -37,10 +37,10 @@ def log(_func: Optional[Callable] = None, *, filename: Optional[str] = None) -> 
             finally:
                 # Записываем лог в файл или выводим в консоль
                 if filename:
-                    with open(filename, 'a', encoding='utf-8') as f:
+                    with open(filename, "a", encoding="utf-8") as f:
                         f.write(log_message)
                 else:
-                    print(log_message, end='')
+                    print(log_message, end="")
 
             return result
 
