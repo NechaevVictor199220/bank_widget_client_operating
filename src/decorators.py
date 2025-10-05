@@ -3,11 +3,12 @@ from datetime import datetime
 from typing import Any, Callable, Optional
 
 
-def log(filename: Optional[str] = None) -> Callable:
+def log(_func: Optional[Callable] = None, *, filename: Optional[str] = None) -> Callable:
     """
     Декоратор для логирования выполнения функций.
 
     Args:
+        _func: Функция для декорирования (используется внутренне)
         filename: имя файла для записи логов. Если None - вывод в консоль.
 
     Returns:
@@ -45,4 +46,8 @@ def log(filename: Optional[str] = None) -> Callable:
 
         return wrapper
 
-    return decorator
+    # Обработка использования без скобок @log
+    if _func is None:
+        return decorator
+    else:
+        return decorator(_func)
