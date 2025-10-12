@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Optional, Union
+from typing import Dict, Union
 
 try:
     import requests
@@ -10,35 +10,39 @@ except ImportError:
     print("Предупреждение: библиотека requests не установлена. Установите её для работы с API.")
 
 
-def get_exchange_rate(from_currency: str, to_currency: str = "RUB") -> Optional[float]:
+def convert_to_rubles(amount: float, currency_code: str) -> float:
     """
-    Получает текущий курс валюты к рублю через внешнее API.
+    Конвертирует сумму в рубли, обращаясь к внешнему API для получения курса валют.
 
     Args:
-        from_currency (str): Код исходной валюты (например, "USD", "EUR")
-        to_currency (str): Код целевой валюты (по умолчанию "RUB")
+        amount (float): Сумма для конвертации
+        currency_code (str): Код валюты (USD, EUR, RUB и т.д.)
 
     Returns:
-        Optional[float]: Курс обмена или None в случае ошибки
+        float: Сумма в рублях
     """
+    # Если валюта уже рубли, возвращаем как есть
+    if currency_code.upper() == "RUB":
+        return amount
+
+    # Проверяем доступность библиотеки requests
     if not REQUESTS_AVAILABLE:
         print("Ошибка: Библиотека requests не установлена")
-        return None
+        return _get_amount_with_fixed_rate(amount, currency_code)
 
     api_key = os.getenv("EXCHANGE_RATE_API_KEY")
     if not api_key:
         print("Ошибка: Не установлен API ключ. Установите переменную окружения EXCHANGE_RATE_API_KEY")
-        return None
+        return _get_amount_with_fixed_rate(amount, currency_code)
 
     url = "https://api.apilayer.com/exchangerates_data/convert"
 
     headers = {"apikey": api_key}
 
-    # Исправляем тип params - используем Union для совместимости
-    params: Dict[str, Union[str, int]] = {
-        "from": from_currency,
-        "to": to_currency,
-        "amount": 1,  # Получаем курс для 1 единицы валюты
+    params: Dict[str, Union[str, int, float]] = {
+        "from": currency_code.upper(),
+        "to": "RUB",
+        "amount": amount,
     }
 
     try:
@@ -53,49 +57,31 @@ def get_exchange_rate(from_currency: str, to_currency: str = "RUB") -> Optional[
                 return float(result)
             else:
                 print(f"Неверный формат результата: {result}")
-                return None
+                return _get_amount_with_fixed_rate(amount, currency_code)
         else:
             print(f"Ошибка API: {data.get('error', {}).get('info', 'Неизвестная ошибка')}")
-            return None
+            return _get_amount_with_fixed_rate(amount, currency_code)
 
     except requests.exceptions.RequestException as e:
         print(f"Ошибка при запросе к API: {e}")
-        return None
+        return _get_amount_with_fixed_rate(amount, currency_code)
     except (KeyError, ValueError) as e:
         print(f"Ошибка при обработке ответа API: {e}")
-        return None
+        return _get_amount_with_fixed_rate(amount, currency_code)
 
 
-# Кэш курсов валют чтобы не делать лишние запросы
-_exchange_rates_cache: Dict[str, float] = {}
-
-
-def convert_to_rubles(amount: float, currency_code: str) -> float:
+def _get_amount_with_fixed_rate(amount: float, currency_code: str) -> float:
     """
-    Конвертирует сумму в рубли.
+    Вспомогательная функция для получения суммы с фиксированным курсом при ошибках API.
 
     Args:
         amount (float): Сумма для конвертации
-        currency_code (str): Код валюты (USD, EUR, RUB и т.д.)
+        currency_code (str): Код валюты
 
     Returns:
-        float: Сумма в рублях
+        float: Сумма в рублях по фиксированному курсу
     """
-    # Если валюта уже рубли, возвращаем как есть
-    if currency_code.upper() == "RUB":
-        return amount
-
-    cache_key = f"{currency_code.upper()}_RUB"
-
-    # Проверяем кэш
-    if cache_key not in _exchange_rates_cache:
-        rate = get_exchange_rate(currency_code.upper(), "RUB")
-        if rate is None:
-            # Если не удалось получить курс, используем фиксированные значения
-            fixed_rates = {"USD": 90.0, "EUR": 100.0}
-            rate = fixed_rates.get(currency_code.upper(), 1.0)
-            print(f"Используется фиксированный курс для {currency_code}: {rate}")
-
-        _exchange_rates_cache[cache_key] = rate
-
-    return amount * _exchange_rates_cache[cache_key]
+    fixed_rates = {"USD": 90.0, "EUR": 100.0}
+    rate = fixed_rates.get(currency_code.upper(), 1.0)
+    print(f"Используется фиксированный курс для {currency_code}: {rate}")
+    return amount * rate

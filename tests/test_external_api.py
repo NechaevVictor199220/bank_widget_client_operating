@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import requests
 
-from src.external_api import convert_to_rubles, get_exchange_rate
+from src.external_api import convert_to_rubles
 from src.utils import get_transaction_amount_in_rubles, load_transactions
 
 
@@ -12,31 +12,32 @@ class TestExternalAPI(unittest.TestCase):
 
     @patch("src.external_api.requests.get")
     @patch("src.external_api.os.getenv")
-    def test_get_exchange_rate_success(self, mock_getenv: Any, mock_get: Any) -> None:
-        """Тест успешного получения курса валют"""
+    def test_convert_to_rubles_success(self, mock_getenv: Any, mock_get: Any) -> None:
+        """Тест успешной конвертации через API"""
         mock_getenv.return_value = "test_api_key"
 
         # Мокаем успешный ответ API
         mock_response = MagicMock()
-        mock_response.json.return_value = {"success": True, "result": 90.5}
+        mock_response.json.return_value = {"success": True, "result": 8500.0}
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        rate = get_exchange_rate("USD", "RUB")
-        self.assertEqual(rate, 90.5)
+        result = convert_to_rubles(100.0, "USD")
+        self.assertEqual(result, 8500.0)
 
     @patch("src.external_api.os.getenv")
-    def test_get_exchange_rate_no_api_key(self, mock_getenv: Any) -> None:
-        """Тест отсутствия API ключа"""
+    def test_convert_to_rubles_no_api_key(self, mock_getenv: Any) -> None:
+        """Тест конвертации без API ключа"""
         mock_getenv.return_value = None
 
-        rate = get_exchange_rate("USD", "RUB")
-        self.assertIsNone(rate)
+        result = convert_to_rubles(100.0, "USD")
+        # Должен использовать фиксированный курс 90.0
+        self.assertEqual(result, 9000.0)
 
     @patch("src.external_api.requests.get")
     @patch("src.external_api.os.getenv")
-    def test_get_exchange_rate_api_error(self, mock_getenv: Any, mock_get: Any) -> None:
-        """Тест ошибки API"""
+    def test_convert_to_rubles_api_error(self, mock_getenv: Any, mock_get: Any) -> None:
+        """Тест конвертации при ошибке API"""
         mock_getenv.return_value = "test_api_key"
 
         # Мокаем ответ с ошибкой API
@@ -45,25 +46,27 @@ class TestExternalAPI(unittest.TestCase):
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        rate = get_exchange_rate("USD", "RUB")
-        self.assertIsNone(rate)
+        result = convert_to_rubles(100.0, "USD")
+        # Должен использовать фиксированный курс 90.0
+        self.assertEqual(result, 9000.0)
 
     @patch("src.external_api.requests.get")
     @patch("src.external_api.os.getenv")
-    def test_get_exchange_rate_request_exception(self, mock_getenv: Any, mock_get: Any) -> None:
-        """Тест исключения при запросе"""
+    def test_convert_to_rubles_request_exception(self, mock_getenv: Any, mock_get: Any) -> None:
+        """Тест конвертации при исключении запроса"""
         mock_getenv.return_value = "test_api_key"
 
         # Используем конкретное исключение requests
         mock_get.side_effect = requests.exceptions.RequestException("Network error")
 
-        rate = get_exchange_rate("USD", "RUB")
-        self.assertIsNone(rate)
+        result = convert_to_rubles(100.0, "USD")
+        # Должен использовать фиксированный курс 90.0
+        self.assertEqual(result, 9000.0)
 
     @patch("src.external_api.requests.get")
     @patch("src.external_api.os.getenv")
-    def test_get_exchange_rate_json_decode_error(self, mock_getenv: Any, mock_get: Any) -> None:
-        """Тест ошибки декодирования JSON"""
+    def test_convert_to_rubles_json_decode_error(self, mock_getenv: Any, mock_get: Any) -> None:
+        """Тест конвертации при ошибке декодирования JSON"""
         mock_getenv.return_value = "test_api_key"
 
         mock_response = MagicMock()
@@ -71,13 +74,14 @@ class TestExternalAPI(unittest.TestCase):
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        rate = get_exchange_rate("USD", "RUB")
-        self.assertIsNone(rate)
+        result = convert_to_rubles(100.0, "USD")
+        # Должен использовать фиксированный курс 90.0
+        self.assertEqual(result, 9000.0)
 
     @patch("src.external_api.requests.get")
     @patch("src.external_api.os.getenv")
-    def test_get_exchange_rate_key_error(self, mock_getenv: Any, mock_get: Any) -> None:
-        """Тест ошибки ключа в ответе"""
+    def test_convert_to_rubles_key_error(self, mock_getenv: Any, mock_get: Any) -> None:
+        """Тест конвертации при ошибке ключа в ответе"""
         mock_getenv.return_value = "test_api_key"
 
         mock_response = MagicMock()
@@ -88,8 +92,24 @@ class TestExternalAPI(unittest.TestCase):
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        rate = get_exchange_rate("USD", "RUB")
-        self.assertIsNone(rate)
+        result = convert_to_rubles(100.0, "USD")
+        # Должен использовать фиксированный курс 90.0
+        self.assertEqual(result, 9000.0)
+
+    @patch("src.external_api.requests.get")
+    @patch("src.external_api.os.getenv")
+    def test_convert_to_rubles_invalid_result_format(self, mock_getenv: Any, mock_get: Any) -> None:
+        """Тест конвертации при неверном формате результата"""
+        mock_getenv.return_value = "test_api_key"
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"success": True, "result": "invalid"}
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+
+        result = convert_to_rubles(100.0, "USD")
+        # Должен использовать фиксированный курс 90.0
+        self.assertEqual(result, 9000.0)
 
     def test_convert_to_rubles_rub(self) -> None:
         """Тест конвертации рублей в рубли"""
@@ -114,45 +134,26 @@ class TestExternalAPI(unittest.TestCase):
         # Должен использовать курс по умолчанию 1.0
         self.assertEqual(result, 100.0)
 
-    def test_convert_to_rubles_cache(self) -> None:
-        """Тест кэширования курсов валют"""
-        # Очищаем кэш
-        from src.external_api import _exchange_rates_cache
-
-        _exchange_rates_cache.clear()
-
-        # Первый вызов - должен вычислить
-        result1 = convert_to_rubles(100.0, "USD")
-
-        # Второй вызов - должен использовать кэш
-        result2 = convert_to_rubles(200.0, "USD")
-
-        self.assertEqual(result1, 9000.0)  # 100 * 90
-        self.assertEqual(result2, 18000.0)  # 200 * 90
-
     @patch("src.external_api.REQUESTS_AVAILABLE", False)
-    def test_get_exchange_rate_requests_not_available(self) -> None:
+    def test_convert_to_rubles_requests_not_available(self) -> None:
         """Тест когда requests не установлен"""
-        rate = get_exchange_rate("USD", "RUB")
-        self.assertIsNone(rate)
+        result = convert_to_rubles(100.0, "USD")
+        # Должен использовать фиксированный курс 90.0
+        self.assertEqual(result, 9000.0)
 
 
 class TestUtils(unittest.TestCase):
 
     def test_get_transaction_amount_in_rubles_rub(self) -> None:
         """Тест получения суммы в рублях для RUB транзакции"""
-        transaction: Dict[str, Any] = {  # Добавляем аннотацию типа
-            "operationAmount": {"amount": "1000.50", "currency": {"code": "RUB"}}
-        }
+        transaction: Dict[str, Any] = {"operationAmount": {"amount": "1000.50", "currency": {"code": "RUB"}}}
 
         amount = get_transaction_amount_in_rubles(transaction)
         self.assertEqual(amount, 1000.50)
 
     def test_get_transaction_amount_in_rubles_usd(self) -> None:
         """Тест получения суммы в рублях для USD транзакции"""
-        transaction: Dict[str, Any] = {  # Добавляем аннотацию типа
-            "operationAmount": {"amount": "100.00", "currency": {"code": "USD"}}
-        }
+        transaction: Dict[str, Any] = {"operationAmount": {"amount": "100.00", "currency": {"code": "USD"}}}
 
         amount = get_transaction_amount_in_rubles(transaction)
         self.assertIsInstance(amount, float)
@@ -160,41 +161,35 @@ class TestUtils(unittest.TestCase):
 
     def test_get_transaction_amount_in_rubles_invalid_data(self) -> None:
         """Тест обработки невалидных данных транзакции"""
-        transaction: Dict[str, Any] = {  # Добавляем аннотацию типа
-            "operationAmount": {"amount": "invalid", "currency": {"code": "USD"}}
-        }
+        transaction: Dict[str, Any] = {"operationAmount": {"amount": "invalid", "currency": {"code": "USD"}}}
 
         amount = get_transaction_amount_in_rubles(transaction)
         self.assertIsNone(amount)
 
     def test_get_transaction_amount_in_rubles_missing_data(self) -> None:
         """Тест обработки отсутствующих данных"""
-        transaction: Dict[str, Any] = {}  # Добавляем аннотацию типа
+        transaction: Dict[str, Any] = {}
 
         amount = get_transaction_amount_in_rubles(transaction)
         self.assertIsNone(amount)
 
     def test_get_transaction_amount_in_rubles_empty_amount(self) -> None:
         """Тест обработки пустой суммы"""
-        transaction: Dict[str, Any] = {  # Добавляем аннотацию типа
-            "operationAmount": {"amount": "", "currency": {"code": "RUB"}}
-        }
+        transaction: Dict[str, Any] = {"operationAmount": {"amount": "", "currency": {"code": "RUB"}}}
 
         amount = get_transaction_amount_in_rubles(transaction)
         self.assertIsNone(amount)
 
     def test_get_transaction_amount_in_rubles_none_amount(self) -> None:
         """Тест обработки None суммы"""
-        transaction: Dict[str, Any] = {  # Добавляем аннотацию типа
-            "operationAmount": {"amount": None, "currency": {"code": "RUB"}}
-        }
+        transaction: Dict[str, Any] = {"operationAmount": {"amount": None, "currency": {"code": "RUB"}}}
 
         amount = get_transaction_amount_in_rubles(transaction)
         self.assertIsNone(amount)
 
     def test_get_transaction_amount_in_rubles_missing_currency(self) -> None:
         """Тест обработки отсутствующей валюты"""
-        transaction: Dict[str, Any] = {  # Добавляем аннотацию типа
+        transaction: Dict[str, Any] = {
             "operationAmount": {
                 "amount": "100.00"
                 # Нет информации о валюте
@@ -207,7 +202,7 @@ class TestUtils(unittest.TestCase):
 
     def test_get_transaction_amount_in_rubles_missing_operation_amount(self) -> None:
         """Тест обработки отсутствующего operationAmount"""
-        transaction: Dict[str, Any] = {  # Добавляем аннотацию типа
+        transaction: Dict[str, Any] = {
             "other_field": "value"
             # Нет operationAmount
         }
@@ -217,9 +212,7 @@ class TestUtils(unittest.TestCase):
 
     def test_get_transaction_amount_in_rubles_invalid_amount_format(self) -> None:
         """Тест обработки неверного формата суммы"""
-        transaction: Dict[str, Any] = {  # Добавляем аннотацию типа
-            "operationAmount": {"amount": "not_a_number", "currency": {"code": "RUB"}}
-        }
+        transaction: Dict[str, Any] = {"operationAmount": {"amount": "not_a_number", "currency": {"code": "RUB"}}}
 
         amount = get_transaction_amount_in_rubles(transaction)
         self.assertIsNone(amount)
