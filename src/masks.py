@@ -3,10 +3,10 @@ import logging
 
 
 masks_logger = logging.getLogger('masks')
-masks_logger.setLevel(logging.INFO)
+masks_logger.setLevel(logging.DEBUG)
 masks_logger.handlers.clear()
 file_handler = logging.FileHandler('logs/masks.log', mode='w', encoding='utf-8')
-file_handler.setLevel(logging.INFO)
+file_handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'

@@ -5,10 +5,10 @@ from .external_api import convert_to_rubles
 
 
 utils_logger = logging.getLogger('utils')
-utils_logger.setLevel(logging.INFO)
+utils_logger.setLevel(logging.DEBUG)
 utils_logger.handlers.clear()
 file_handler = logging.FileHandler('logs/utils.log', mode='w', encoding='utf-8')
-file_handler.setLevel(logging.INFO)
+file_handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
