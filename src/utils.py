@@ -1,21 +1,19 @@
 import json
 import logging
-from typing import Any, Dict, List, Optional
-from pathlib import Path
-from .external_api import convert_to_rubles
 import os
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 
+from .external_api import convert_to_rubles
 
-utils_logger = logging.getLogger('utils')
+utils_logger = logging.getLogger("utils")
 utils_logger.setLevel(logging.DEBUG)
 utils_logger.handlers.clear()
-file_handler = logging.FileHandler('logs/utils.log', mode='w', encoding='utf-8')
+file_handler = logging.FileHandler("logs/utils.log", mode="w", encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 file_handler.setFormatter(formatter)
 utils_logger.addHandler(file_handler)
 utils_logger.propagate = False
@@ -40,11 +38,11 @@ def load_transactions(file_path: str) -> List[Dict[str, Any]]:
     file_extension = Path(file_path).suffix.lower()
 
     try:
-        if file_extension == '.json':
+        if file_extension == ".json":
             return _load_json_transactions(file_path)
-        elif file_extension == '.csv':
+        elif file_extension == ".csv":
             return _load_csv_transactions(file_path)
-        elif file_extension in ['.xlsx', '.xls']:
+        elif file_extension in [".xlsx", ".xls"]:
             return _load_excel_transactions(file_path)
         else:
             utils_logger.error(f"Неподдерживаемый формат файла: {file_extension}")
@@ -67,7 +65,7 @@ def _load_json_transactions(file_path: str) -> List[Dict[str, Any]]:
     """
     utils_logger.info(f"Загрузка JSON файла: {file_path}")
 
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         data = json.load(file)
 
         if isinstance(data, list):
@@ -96,7 +94,7 @@ def _load_csv_transactions(file_path: str) -> List[Dict[str, Any]]:
         df = pd.read_csv(file_path)
 
         # Преобразуем DataFrame в список словарей
-        transactions = df.to_dict('records')
+        transactions = df.to_dict("records")
 
         utils_logger.info(f"Успешно загружено {len(transactions)} транзакций из CSV файла")
         return transactions
@@ -120,7 +118,6 @@ def _load_excel_transactions(file_path: str) -> List[Dict[str, Any]]:
         List[Dict[str, Any]]: Список транзакций
     """
     try:
-        import pandas as pd
 
         utils_logger.info(f"Загрузка Excel файла: {file_path}")
 
@@ -128,7 +125,7 @@ def _load_excel_transactions(file_path: str) -> List[Dict[str, Any]]:
         df = pd.read_excel(file_path)
 
         # Преобразуем DataFrame в список словарей
-        transactions = df.to_dict('records')
+        transactions = df.to_dict("records")
 
         utils_logger.info(f"Успешно загружено {len(transactions)} транзакций из Excel файла")
         return transactions
