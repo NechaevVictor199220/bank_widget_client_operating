@@ -1,9 +1,8 @@
 import re
-from datetime import datetime
-from typing import Any, Dict, List
+from typing import List, Dict, Any
 
 
-def filter_by_state(operations: List[Dict[str, Any]], state: str = "EXECUTED") -> List[Dict[str, Any]]:
+def filter_by_state(operations: List[Dict], state: str = "EXECUTED") -> List[Dict]:
     """
     Функция, которая принимает список словарей и опционально значение для ключа
     state (по умолчанию 'EXECUTED').
@@ -13,23 +12,23 @@ def filter_by_state(operations: List[Dict[str, Any]], state: str = "EXECUTED") -
     return [operation for operation in operations if operation.get("state") == state]
 
 
-def sort_by_date(operation: List[Dict[str, Any]], reverse: bool = True) -> List[Dict[str, Any]]:
+def sort_by_date(operations: List[Dict], reverse: bool = True) -> List[Dict]:
     """
     Функция sort_by_date, которая принимает список словарей и необязательный параметр,
     задающий порядок сортировки (по умолчанию — убывание).
     Функция должна возвращает новый список, отсортированный по дате (date).
     """
 
-    def get_date_key(operation: Dict[str, Any]) -> datetime:
-        """Вспомогательная функция для получения даты из операции"""
-        date_str = operation.get("date", "")
-        try:
-            return datetime.fromisoformat(date_str)
-        except (ValueError, TypeError):
-            # Если дата некорректна, возвращаем минимальную дату
-            return datetime.min
+    def get_sort_key(operation: Dict) -> str:
+        date = operation.get("date")
+        # Если дата None или пустая, используем пустую строку для сортировки
+        return date if date else ""
 
-    return sorted(operation, key=get_date_key, reverse=reverse)
+    return sorted(
+        operations,
+        key=get_sort_key,
+        reverse=reverse,
+    )
 
 
 def filter_by_description(data: List[Dict], search: str) -> List[Dict]:
@@ -61,3 +60,39 @@ def filter_by_description(data: List[Dict], search: str) -> List[Dict]:
     except re.error:
         # В случае ошибки в регулярном выражении возвращаем пустой список
         return []
+
+
+def count_operations_by_category(data: List[Dict], categories: List[str]) -> Dict[str, int]:
+    """
+    Подсчитывает количество операций по заданным категориям.
+
+    Args:
+        data: Список словарей с данными о банковских операциях
+        categories: Список категорий для подсчета
+
+    Returns:
+        Dict[str, int]: Словарь, где ключи - названия категорий,
+                       значения - количество операций в каждой категории
+    """
+    if not data or not categories:
+        return {}
+
+    # Инициализируем словарь с нулевыми значениями для всех категорий
+    category_counts = {category: 0 for category in categories}
+
+    for operation in data:
+        description = operation.get("description")
+
+        # Пропускаем операции без описания или с None описанием
+        if not description:
+            continue
+
+        description = description.lower()
+
+        # Проверяем каждую категорию на наличие в описании операции
+        for category in categories:
+            # Регистронезависимый поиск категории в описании
+            if category.lower() in description:
+                category_counts[category] += 1
+
+    return category_counts
