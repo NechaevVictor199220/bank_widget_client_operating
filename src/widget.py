@@ -27,25 +27,12 @@ def get_date(date_str: str) -> str:
        Функция принимает на вход строку с датой в формате "2024-03-11T02:26:18.671407"
     и возвращает строку с датой в формате "ДД.ММ.ГГГГ" ("11.03.2024").
     """
+    if date_str is None or date_str == "":
+        return "Дата не указана"
+
     try:
-        date_obj = datetime.fromisoformat(date_str)
-        return date_obj.strftime("%d.%m.%Y")
-
-    except (ValueError, TypeError):
-        return date_str
-
-
-# if __name__ == "__main__":
-#     print(mask_account_card("Maestro 1596837868705199"))
-#     print(mask_account_card("Счет 64686473678894779589"))
-#     print(mask_account_card("MasterCard 7158300734726758"))
-#     print(mask_account_card("Счет 35383033474447895560"))
-#     print(mask_account_card("Visa Classic 6831982476737658"))
-#     print(mask_account_card("Visa Platinum 8990922113665229"))
-#     print(mask_account_card("Visa Gold 5999414228426353"))
-#     print(mask_account_card("Счет 73654108430135874305"))
-#
-# if __name__ == "__main__":
-#     print(get_date("2024-03-11T02:26:18.671407"))  # 11.03.2024
-#     print(get_date("2023-12-31T23:59:59.999999"))  # 31.12.2023
-#     print(get_date("2024-01-01T00:00:00.000000"))  # 01.01.2024
+        # Пытаемся распарсить дату
+        dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+        return dt.strftime("%d.%m.%Y")
+    except (ValueError, AttributeError):
+        return "Дата не указана"

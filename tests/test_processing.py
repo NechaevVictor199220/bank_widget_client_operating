@@ -2,49 +2,31 @@ from typing import Any, Dict, List
 
 import pytest
 
-from src.processing import filter_by_state, sort_by_date, filter_by_description, count_operations_by_category
+from src.processing import (
+    count_operations_by_category,
+    count_operations_by_type_advanced,
+    filter_by_description,
+    filter_by_state,
+    get_most_common_categories,
+    sort_by_date,
+)
 
 
 @pytest.fixture
 def sample_operations() -> List[Dict[str, Any]]:
     """Фикстура с тестовыми операциями"""
     return [
-        {
-            "id": 1,
-            "state": "EXECUTED",
-            "date": "2024-01-01T00:00:00.000000",
-            "description": "Перевод организации"
-        },
+        {"id": 1, "state": "EXECUTED", "date": "2024-01-01T00:00:00.000000", "description": "Перевод организации"},
         {
             "id": 2,
             "state": "CANCELED",
             "date": "2024-01-02T00:00:00.000000",
-            "description": "Перевод со счета на счет"
+            "description": "Перевод со счета на счет",
         },
-        {
-            "id": 3,
-            "state": "EXECUTED",
-            "date": "2024-01-03T00:00:00.000000",
-            "description": "Оплата услуг"
-        },
-        {
-            "id": 4,
-            "state": "EXECUTED",
-            "date": "2024-01-04T00:00:00.000000",
-            "description": "Перевод денег"
-        },
-        {
-            "id": 5,
-            "state": "PENDING",
-            "date": "2024-01-05T00:00:00.000000",
-            "description": "Оплата товаров"
-        },
-        {
-            "id": 6,
-            "state": "EXECUTED",
-            "date": "2024-01-06T00:00:00.000000",
-            "description": "Пополнение счета"
-        }
+        {"id": 3, "state": "EXECUTED", "date": "2024-01-03T00:00:00.000000", "description": "Оплата услуг"},
+        {"id": 4, "state": "EXECUTED", "date": "2024-01-04T00:00:00.000000", "description": "Перевод денег"},
+        {"id": 5, "state": "PENDING", "date": "2024-01-05T00:00:00.000000", "description": "Оплата товаров"},
+        {"id": 6, "state": "EXECUTED", "date": "2024-01-06T00:00:00.000000", "description": "Пополнение счета"},
     ]
 
 
@@ -73,7 +55,7 @@ def operations_invalid_dates() -> List[Dict[str, Any]]:
     "state,expected_count",
     [
         ("EXECUTED", 4),  # операции 1, 3, 4, 6
-        ("PENDING", 1),   # операция 5
+        ("PENDING", 1),  # операция 5
         ("CANCELED", 1),  # операция 2
         ("NONEXISTENT", 0),
     ],
@@ -258,14 +240,8 @@ def test_filter_by_description_empty_data() -> None:
 def test_filter_by_description_special_characters() -> None:
     """Тест поиска с специальными символами"""
     operations_with_special_chars = [
-        {
-            "id": 1,
-            "description": "Payment (USD) to vendor"
-        },
-        {
-            "id": 2,
-            "description": "Transfer $100.00"
-        }
+        {"id": 1, "description": "Payment (USD) to vendor"},
+        {"id": 2, "description": "Transfer $100.00"},
     ]
     result = filter_by_description(operations_with_special_chars, "(USD)")
     assert len(result) == 1
@@ -275,18 +251,12 @@ def test_filter_by_description_special_characters() -> None:
 def test_filter_by_description_missing_description() -> None:
     """Тест с операциями без описания"""
     operations_with_missing_desc = [
-        {
-            "id": 1,
-            "description": "Перевод"
-        },
+        {"id": 1, "description": "Перевод"},
         {
             "id": 2,
             # Нет описания
         },
-        {
-            "id": 3,
-            "description": None
-        }
+        {"id": 3, "description": None},
     ]
     result = filter_by_description(operations_with_missing_desc, "Перевод")
     assert len(result) == 1
@@ -305,7 +275,7 @@ def test_filter_by_description_missing_description() -> None:
     ],
 )
 def test_filter_by_description_parametrized(
-        sample_operations: List[Dict[str, Any]], search_string: str, expected_ids: List[int]
+    sample_operations: List[Dict[str, Any]], search_string: str, expected_ids: List[int]
 ) -> None:
     """Параметризованный тест фильтрации по описанию"""
     result = filter_by_description(sample_operations, search_string)
@@ -318,7 +288,7 @@ def test_filter_by_description_regex_special_chars() -> None:
     operations = [
         {"id": 1, "description": "Payment .* regex test"},
         {"id": 2, "description": "Transfer + plus test"},
-        {"id": 3, "description": "Normal payment"}
+        {"id": 3, "description": "Normal payment"},
     ]
 
     # Должен искать буквально ".", а не как regex wildcard
@@ -338,11 +308,7 @@ def test_count_operations_by_category_basic(sample_operations: List[Dict[str, An
     categories = ["Перевод", "Оплата", "Пополнение"]
     result = count_operations_by_category(sample_operations, categories)
 
-    expected = {
-        "Перевод": 3,  # операции 1, 2, 4
-        "Оплата": 2,  # операции 3, 5
-        "Пополнение": 1  # операция 6
-    }
+    expected = {"Перевод": 3, "Оплата": 2, "Пополнение": 1}  # операции 1, 2, 4  # операции 3, 5  # операция 6
     assert result == expected
 
 
@@ -351,11 +317,7 @@ def test_count_operations_by_category_case_insensitive(sample_operations: List[D
     categories = ["перевод", "ОПЛАТА", "пОпОлНеНиЕ"]
     result = count_operations_by_category(sample_operations, categories)
 
-    expected = {
-        "перевод": 3,
-        "ОПЛАТА": 2,
-        "пОпОлНеНиЕ": 1
-    }
+    expected = {"перевод": 3, "ОПЛАТА": 2, "пОпОлНеНиЕ": 1}
     assert result == expected
 
 
@@ -364,11 +326,7 @@ def test_count_operations_by_category_partial_match(sample_operations: List[Dict
     categories = ["организации", "услуг", "денег"]
     result = count_operations_by_category(sample_operations, categories)
 
-    expected = {
-        "организации": 1,  # операция 1
-        "услуг": 1,  # операция 3
-        "денег": 1  # операция 4
-    }
+    expected = {"организации": 1, "услуг": 1, "денег": 1}  # операция 1  # операция 3  # операция 4
     assert result == expected
 
 
@@ -377,11 +335,7 @@ def test_count_operations_by_category_no_matches(sample_operations: List[Dict[st
     categories = ["Кредит", "Вклад", "Ипотека"]
     result = count_operations_by_category(sample_operations, categories)
 
-    expected = {
-        "Кредит": 0,
-        "Вклад": 0,
-        "Ипотека": 0
-    }
+    expected = {"Кредит": 0, "Вклад": 0, "Ипотека": 0}
     assert result == expected
 
 
@@ -410,16 +364,13 @@ def test_count_operations_by_category_operations_without_description() -> None:
         {"id": 2},  # нет описания
         {"id": 3, "description": None},  # описание None
         {"id": 4, "description": ""},  # пустое описание
-        {"id": 5, "description": "Оплата"}
+        {"id": 5, "description": "Оплата"},
     ]
 
     categories = ["Перевод", "Оплата"]
     result = count_operations_by_category(operations, categories)
 
-    expected = {
-        "Перевод": 1,  # только операция 1
-        "Оплата": 1    # только операция 5
-    }
+    expected = {"Перевод": 1, "Оплата": 1}  # только операция 1  # только операция 5
     assert result == expected
 
 
@@ -428,16 +379,13 @@ def test_count_operations_by_category_multiple_matches() -> None:
     operations = [
         {"id": 1, "description": "Перевод и оплата услуг"},
         {"id": 2, "description": "Оплата товаров"},
-        {"id": 3, "description": "Простой перевод"}
+        {"id": 3, "description": "Простой перевод"},
     ]
 
     categories = ["Перевод", "Оплата"]
     result = count_operations_by_category(operations, categories)
 
-    expected = {
-        "Перевод": 2,  # операции 1 и 3
-        "Оплата": 2  # операции 1 и 2
-    }
+    expected = {"Перевод": 2, "Оплата": 2}  # операции 1 и 3  # операции 1 и 2
     assert result == expected
 
 
@@ -446,17 +394,13 @@ def test_count_operations_by_category_special_characters() -> None:
     operations = [
         {"id": 1, "description": "Payment (USD) to vendor"},
         {"id": 2, "description": "Transfer $100.00"},
-        {"id": 3, "description": "Refund + bonus"}
+        {"id": 3, "description": "Refund + bonus"},
     ]
 
     categories = ["Payment", "Transfer", "Refund"]
     result = count_operations_by_category(operations, categories)
 
-    expected = {
-        "Payment": 1,
-        "Transfer": 1,
-        "Refund": 1
-    }
+    expected = {"Payment": 1, "Transfer": 1, "Refund": 1}
     assert result == expected
 
 
@@ -464,7 +408,10 @@ def test_count_operations_by_category_special_characters() -> None:
     "categories,expected_counts",
     [
         (["Перевод", "Оплата"], {"Перевод": 3, "Оплата": 2}),
-        (["организации", "счета"], {"организации": 1, "счета": 2}),  # "счета" входит в "Перевод со счета на счет" и "Пополнение счета"
+        (
+            ["организации", "счета"],
+            {"организации": 1, "счета": 2},
+        ),  # "счета" входит в "Перевод со счета на счет" и "Пополнение счета"
         (["денег", "товаров"], {"денег": 1, "товаров": 1}),
         (["несуществующая"], {"несуществующая": 0}),
     ],
@@ -479,16 +426,82 @@ def test_count_operations_by_category_parametrized(
 
 def test_count_operations_by_category_whitespace_handling() -> None:
     """Тест обработки пробелов в категориях"""
-    operations = [
-        {"id": 1, "description": "Перевод организации"},
-        {"id": 2, "description": "Оплата услуг"}
-    ]
+    operations = [{"id": 1, "description": "Перевод организации"}, {"id": 2, "description": "Оплата услуг"}]
 
     categories = ["Перевод", "услуг"]  # Ищем частичные совпадения
     result = count_operations_by_category(operations, categories)
 
-    expected = {
-        "Перевод": 1,
-        "услуг": 1  # Найдет "услуг" в "Оплата услуг"
-    }
+    expected = {"Перевод": 1, "услуг": 1}  # Найдет "услуг" в "Оплата услуг"
     assert result == expected
+
+
+def test_count_operations_by_category_with_counter(sample_operations: List[Dict[str, Any]]) -> None:
+    """Тест подсчета операций по категориям с использованием Counter"""
+    categories = ["Перевод", "Оплата", "Пополнение"]
+    result = count_operations_by_category(sample_operations, categories)
+
+    expected = {"Перевод": 3, "Оплата": 2, "Пополнение": 1}  # операции 1, 2, 4  # операции 3, 5  # операция 6
+    assert result == expected
+    # Проверяем, что все категории присутствуют в результате
+    assert set(result.keys()) == set(categories)
+
+
+def test_count_operations_by_type_advanced(sample_operations: List[Dict[str, Any]]) -> None:
+    """Тест альтернативной реализации с Counter"""
+    categories = ["Перевод", "Оплата", "Пополнение"]
+    result = count_operations_by_type_advanced(sample_operations, categories)
+
+    expected = {"Перевод": 3, "Оплата": 2, "Пополнение": 1}
+    assert result == expected
+
+
+def test_get_most_common_categories(sample_operations: List[Dict[str, Any]]) -> None:
+    """Тест поиска наиболее частых категорий"""
+    result = get_most_common_categories(sample_operations, top_n=3)
+
+    # Проверяем, что получили список кортежей
+    assert isinstance(result, list)
+    assert all(isinstance(item, tuple) and len(item) == 2 for item in result)
+    assert len(result) <= 3
+
+    # Проверяем, что самые частые слова присутствуют
+    common_words = [word for word, count in result]
+    assert any(word in ["перевод", "оплата", "пополнение"] for word in common_words)
+
+
+def test_get_most_common_categories_empty() -> None:
+    """Тест поиска частых категорий с пустыми данными"""
+    assert get_most_common_categories([]) == []
+    assert get_most_common_categories([{}]) == []
+
+
+def test_count_operations_by_category_efficiency() -> None:
+    """Тест эффективности работы с большим количеством данных"""
+    # Создаем большое количество тестовых операций
+    large_operations = []
+    categories_to_test = ["Перевод", "Оплата", "Кредит", "Вклад"]
+
+    for i in range(1000):
+        operation = {
+            "id": i,
+            "description": f"Операция {i} Перевод денег" if i % 3 == 0 else f"Операция {i} Оплата услуг",
+        }
+        large_operations.append(operation)
+
+    # Проверяем, что функция работает быстро и корректно
+    import time
+
+    start_time = time.time()
+
+    result = count_operations_by_category(large_operations, categories_to_test)
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+
+    # Проверяем корректность результата
+    assert result["Перевод"] > 0
+    assert result["Оплата"] > 0
+    assert result["Кредит"] == 0  # Этой категории нет в данных
+
+    # Проверяем, что выполнение заняло разумное время (менее 1 секунды)
+    assert execution_time < 1.0, f"Функция выполняется слишком медленно: {execution_time} сек"
