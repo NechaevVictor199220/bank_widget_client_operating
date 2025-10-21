@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 
 import pytest
 
-from src.processing import filter_by_state, sort_by_date, filter_by_description
+from src.processing import filter_by_state, sort_by_date, filter_by_description, count_operations_by_category
 
 
 @pytest.fixture
@@ -38,6 +38,12 @@ def sample_operations() -> List[Dict[str, Any]]:
             "state": "PENDING",
             "date": "2024-01-05T00:00:00.000000",
             "description": "Оплата товаров"
+        },
+        {
+            "id": 6,
+            "state": "EXECUTED",
+            "date": "2024-01-06T00:00:00.000000",
+            "description": "Пополнение счета"
         }
     ]
 
@@ -66,14 +72,14 @@ def operations_invalid_dates() -> List[Dict[str, Any]]:
 @pytest.mark.parametrize(
     "state,expected_count",
     [
-        ("EXECUTED", 3),
-        ("PENDING", 1),
-        ("CANCELED", 1),
+        ("EXECUTED", 4),  # операции 1, 3, 4, 6
+        ("PENDING", 1),   # операция 5
+        ("CANCELED", 1),  # операция 2
         ("NONEXISTENT", 0),
     ],
 )
 def test_filter_by_state_parametrized(
-        sample_operations: List[Dict[str, Any]], state: str, expected_count: int
+    sample_operations: List[Dict[str, Any]], state: str, expected_count: int
 ) -> None:
     """Параметризованный тест фильтрации по разным состояниям"""
     result = filter_by_state(sample_operations, state)
@@ -85,7 +91,7 @@ def test_filter_by_state_parametrized(
 def test_filter_by_state_default(sample_operations: List[Dict[str, Any]]) -> None:
     """Тест фильтрации со значением по умолчанию"""
     result = filter_by_state(sample_operations)
-    assert len(result) == 3
+    assert len(result) == 4  # операции 1, 3, 4, 6
     assert all(op["state"] == "EXECUTED" for op in result)
 
 
@@ -324,3 +330,165 @@ def test_filter_by_description_regex_special_chars() -> None:
     result = filter_by_description(operations, "+")
     assert len(result) == 1
     assert result[0]["id"] == 2
+
+
+# Тесты для count_operations_by_category
+def test_count_operations_by_category_basic(sample_operations: List[Dict[str, Any]]) -> None:
+    """Тест базового подсчета операций по категориям"""
+    categories = ["Перевод", "Оплата", "Пополнение"]
+    result = count_operations_by_category(sample_operations, categories)
+
+    expected = {
+        "Перевод": 3,  # операции 1, 2, 4
+        "Оплата": 2,  # операции 3, 5
+        "Пополнение": 1  # операция 6
+    }
+    assert result == expected
+
+
+def test_count_operations_by_category_case_insensitive(sample_operations: List[Dict[str, Any]]) -> None:
+    """Тест регистронезависимого подсчета"""
+    categories = ["перевод", "ОПЛАТА", "пОпОлНеНиЕ"]
+    result = count_operations_by_category(sample_operations, categories)
+
+    expected = {
+        "перевод": 3,
+        "ОПЛАТА": 2,
+        "пОпОлНеНиЕ": 1
+    }
+    assert result == expected
+
+
+def test_count_operations_by_category_partial_match(sample_operations: List[Dict[str, Any]]) -> None:
+    """Тест подсчета с частичным совпадением"""
+    categories = ["организации", "услуг", "денег"]
+    result = count_operations_by_category(sample_operations, categories)
+
+    expected = {
+        "организации": 1,  # операция 1
+        "услуг": 1,  # операция 3
+        "денег": 1  # операция 4
+    }
+    assert result == expected
+
+
+def test_count_operations_by_category_no_matches(sample_operations: List[Dict[str, Any]]) -> None:
+    """Тест подсчета без совпадений"""
+    categories = ["Кредит", "Вклад", "Ипотека"]
+    result = count_operations_by_category(sample_operations, categories)
+
+    expected = {
+        "Кредит": 0,
+        "Вклад": 0,
+        "Ипотека": 0
+    }
+    assert result == expected
+
+
+def test_count_operations_by_category_empty_data() -> None:
+    """Тест подсчета с пустыми данными"""
+    result = count_operations_by_category([], ["Перевод", "Оплата"])
+    assert result == {}
+
+
+def test_count_operations_by_category_empty_categories(sample_operations: List[Dict[str, Any]]) -> None:
+    """Тест подсчета с пустым списком категорий"""
+    result = count_operations_by_category(sample_operations, [])
+    assert result == {}
+
+
+def test_count_operations_by_category_both_empty() -> None:
+    """Тест подсчета с пустыми данными и категориями"""
+    result = count_operations_by_category([], [])
+    assert result == {}
+
+
+def test_count_operations_by_category_operations_without_description() -> None:
+    """Тест подсчета с операциями без описания"""
+    operations = [
+        {"id": 1, "description": "Перевод"},
+        {"id": 2},  # нет описания
+        {"id": 3, "description": None},  # описание None
+        {"id": 4, "description": ""},  # пустое описание
+        {"id": 5, "description": "Оплата"}
+    ]
+
+    categories = ["Перевод", "Оплата"]
+    result = count_operations_by_category(operations, categories)
+
+    expected = {
+        "Перевод": 1,  # только операция 1
+        "Оплата": 1    # только операция 5
+    }
+    assert result == expected
+
+
+def test_count_operations_by_category_multiple_matches() -> None:
+    """Тест подсчета когда операция соответствует нескольким категориям"""
+    operations = [
+        {"id": 1, "description": "Перевод и оплата услуг"},
+        {"id": 2, "description": "Оплата товаров"},
+        {"id": 3, "description": "Простой перевод"}
+    ]
+
+    categories = ["Перевод", "Оплата"]
+    result = count_operations_by_category(operations, categories)
+
+    expected = {
+        "Перевод": 2,  # операции 1 и 3
+        "Оплата": 2  # операции 1 и 2
+    }
+    assert result == expected
+
+
+def test_count_operations_by_category_special_characters() -> None:
+    """Тест подсчета с описаниями, содержащими специальные символы"""
+    operations = [
+        {"id": 1, "description": "Payment (USD) to vendor"},
+        {"id": 2, "description": "Transfer $100.00"},
+        {"id": 3, "description": "Refund + bonus"}
+    ]
+
+    categories = ["Payment", "Transfer", "Refund"]
+    result = count_operations_by_category(operations, categories)
+
+    expected = {
+        "Payment": 1,
+        "Transfer": 1,
+        "Refund": 1
+    }
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "categories,expected_counts",
+    [
+        (["Перевод", "Оплата"], {"Перевод": 3, "Оплата": 2}),
+        (["организации", "счета"], {"организации": 1, "счета": 2}),  # "счета" входит в "Перевод со счета на счет" и "Пополнение счета"
+        (["денег", "товаров"], {"денег": 1, "товаров": 1}),
+        (["несуществующая"], {"несуществующая": 0}),
+    ],
+)
+def test_count_operations_by_category_parametrized(
+    sample_operations: List[Dict[str, Any]], categories: List[str], expected_counts: Dict[str, int]
+) -> None:
+    """Параметризованный тест подсчета операций по категориям"""
+    result = count_operations_by_category(sample_operations, categories)
+    assert result == expected_counts
+
+
+def test_count_operations_by_category_whitespace_handling() -> None:
+    """Тест обработки пробелов в категориях"""
+    operations = [
+        {"id": 1, "description": "Перевод организации"},
+        {"id": 2, "description": "Оплата услуг"}
+    ]
+
+    categories = ["Перевод", "услуг"]  # Ищем частичные совпадения
+    result = count_operations_by_category(operations, categories)
+
+    expected = {
+        "Перевод": 1,
+        "услуг": 1  # Найдет "услуг" в "Оплата услуг"
+    }
+    assert result == expected
