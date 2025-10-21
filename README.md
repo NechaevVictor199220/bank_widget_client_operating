@@ -1,7 +1,6 @@
-# Bank Widget Client Operating
-
-Проект для обработки банковских операций, включая маскировку номеров карт и счетов, фильтрацию и сортировку операций.
-
+# Проект для обработки банковских операций
+Проект для обработки банковских операций,
+включая маскировку номеров карт и счетов, фильтрацию и сортировку операций.
 ## Цель проекта
 
 Создание набора утилит для работы с банковскими данными:
@@ -10,7 +9,23 @@
 - Сортировка операций по дате
 - Форматирование дат
 - Логирование вызовов функций
+- Автоматическая конвертация через внешнее API
+## Поддержка форматов файлов
 
+Проект поддерживает загрузку транзакций из различных форматов:
+
+```python
+from src.utils import load_transactions
+
+# JSON формат
+transactions_json = load_transactions('data/operations.json')
+
+# CSV формат  
+transactions_csv = load_transactions('data/transactions.csv')
+
+# Excel формат
+transactions_excel = load_transactions('data/transactions.xlsx')
+```
 ## Установка
 
 ### Требования
@@ -42,18 +57,40 @@ src/
 
 ├── processing.py     # Функции фильтрации и сортировки
 
-└── decorators.py     # Декораторы для логирования
+├── decorators.py # Декораторы для логирования
+
+├── utils.py # Утилиты для работы с файлами и транзакциями
+
+├── external_api.py # Функции для работы с внешними API
+
+└── logger_config.py # Конфигурация логирования
 
 tests/
 
 ├── test_masks.py     # Тесты для модуля masks
 
+├── test_widget.py # Тесты для модуля widget
+
 ├── test_processing.py # Тесты для модуля processing
 
-└── test_decorators.py # Тесты для модуля decorators
+├── test_decorators.py # Тесты для модуля decorators
+
+├── test_utils.py # Тесты для модуля utils
+
+└── test_external_api.py # Тесты для модуля external_api
+
+data/
+
+├── operations.json # Пример данных в JSON формате
+
+├── transactions.csv # Пример данных в CSV формате
+
+└── transactions_excel.xlsx # Пример данных в Excel формате
+
+logs/ # Папка для файлов логов (создается автоматически)
+
 ## Использование
 ### Импорт модулей
-#### python
 ```
 from src.masks import get_mask_account_number, get_mask_card_number
 
@@ -160,7 +197,7 @@ critical_operation()
 
 # Логирование ошибок
 
-```python
+```
 @log
 def risky_operation() -> None:
     raise ValueError("Недостаточно средств")
@@ -170,6 +207,22 @@ try:
 except ValueError:
     pass
 # Вывод: [2024-03-11 10:30:45] Ошибка в функции risky_operation: Недостаточно средств
+```
+
+## Конвертация валют
+
+```python
+from src.utils import get_transaction_amount_in_rubles
+
+transaction = {
+    "operationAmount": {
+        "amount": "100.00", 
+        "currency": {"code": "USD"}
+    }
+}
+
+amount_in_rubles = get_transaction_amount_in_rubles(transaction)
+# Автоматическая конвертация через внешнее API
 ```
 
 # Тестирование
@@ -188,6 +241,18 @@ poetry run pytest tests/test_widget.py -v
 
 # Тесты для обработки
 poetry run pytest tests/test_processing.py -v
+
+# Тесты для декораторов
+poetry run pytest tests/test_decorators.py -v
+
+# Тесты для конвертаций
+poetry run pytest tests/test_external_api.py -v
+
+# Тесты для генераторов
+poetry run pytest tests/test_generators.py -v
+
+# Тесты для обработки данных
+poetry run pytest tests/test_utils.py -v
 ```
 ### Запуск flake8 для проверки стиля
 ```
@@ -234,6 +299,20 @@ poetry run isort src/
 * Сохранение метаданных: проверка сохранения имени, документации и аннотаций функций
 
 * Использование без скобок: проверка работы декоратора как @log и @log()
+
+### Модуль test_utils.py
+* Загрузка данных из разных форматов: JSON, CSV, Excel
+
+* Конвертация сумм транзакций в рубли
+
+* Обработка ошибок при работе с файлами
+
+### Модуль test_external_api.py  
+* Тестирование работы с внешним API курсов валют
+
+* Обработка сетевых ошибок и невалидных ответов
+
+* Кэширование курсов валют
 
 # Форматирование кода
 ### Проект использует следующие инструменты для поддержания качества кода:
